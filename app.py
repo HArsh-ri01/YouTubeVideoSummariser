@@ -1,5 +1,5 @@
 import streamlit as st
-from pytube import YouTube
+# from pytube import YouTube
 from dotenv import load_dotenv
 
 load_dotenv() ##load all the nevironment variables
@@ -23,20 +23,17 @@ def extract_transcipt_details(youtube_video_url):
 
         transcript = " ".join([i['text'] for i in transcript_text])
 
-        # Get the video title
-        video_title = YouTube(youtube_video_url).title
-
-        return transcript, video_title
+        return transcript
 
     except Exception as e:
         raise e
     
 ## getting the summary based on Prompt from Google Gemini Pro
-def generate_gemini_content(transcript_text,prompt,video_title):
+def generate_gemini_content(transcript_text,prompt):
 
     model=genai.GenerativeModel("gemini-pro")
     response=model.generate_content(prompt+transcript_text)
-    output = f"Video Title: {video_title}\n\n{response.text}"
+    output =response.text
     return output
 
 st.title("YouTube Transcript to Detailed Notes Converter")
@@ -48,9 +45,9 @@ if YouTube_link:
     st.image(f"http://img.youtube.com/vi/{video_id}/0.jpg", use_column_width=True)
 
 if st.button("Get Detailed Notes"):
-    transcript_text, video_title = extract_transcipt_details(YouTube_link)
+    transcript_text = extract_transcipt_details(YouTube_link)
 
     if transcript_text:
-        summary = generate_gemini_content(transcript_text, prompt, video_title)
+        summary = generate_gemini_content(transcript_text, prompt)
         st.markdown("## Detailed Notes:")
         st.write(summary)
