@@ -1,8 +1,8 @@
 import streamlit as st
-# from pytube import YouTube
+from pytube import YouTube
 from dotenv import load_dotenv
 
-load_dotenv() ##load all the nevironment variables
+load_dotenv()
 import os
 import google.generativeai as genai
 
@@ -14,8 +14,6 @@ prompt="""You are Yotube video summarizer. You will be taking the transcript tex
 and summarizing the entire video and providing the important summary in points
 within 250 words. Please provide the summary of the text given here:  """
 
-
-## getting the transcript data from yt videos
 def extract_transcipt_details(youtube_video_url):
     try:
         video_id = youtube_video_url.split("=")[1]
@@ -23,31 +21,31 @@ def extract_transcipt_details(youtube_video_url):
 
         transcript = " ".join([i['text'] for i in transcript_text])
 
-        return transcript
+        video_title = YouTube(youtube_video_url).title
+
+        return transcript, video_title
 
     except Exception as e:
         raise e
     
-## getting the summary based on Prompt from Google Gemini Pro
-def generate_gemini_content(transcript_text,prompt):
+def generate_gemini_content(transcript_text,prompt,video_title):
 
     model=genai.GenerativeModel("gemini-pro")
     response=model.generate_content(prompt+transcript_text)
-    output =response.text
+    output = f"Video Title: {video_title}\n\n{response.text}"
     return output
 
-st.title("YouTube Transcript to Detailed Notes Converter")
+st.title("YouTube Video Summarizer")
 YouTube_link = st.text_input("Enter YouTube Video Link:")
 
 if YouTube_link:
     video_id = YouTube_link.split("=")[1]
-    print(video_id)
     st.image(f"http://img.youtube.com/vi/{video_id}/0.jpg", use_column_width=True)
 
-if st.button("Get Detailed Notes"):
-    transcript_text = extract_transcipt_details(YouTube_link)
+if st.button("Summarize Video"):
+    transcript_text, video_title= extract_transcipt_details(YouTube_link)
 
     if transcript_text:
-        summary = generate_gemini_content(transcript_text, prompt)
-        st.markdown("## Detailed Notes:")
+        summary = generate_gemini_content(transcript_text, prompt, video_title)
+        st.markdown("## Summarize Video:")
         st.write(summary)
